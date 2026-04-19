@@ -1,6 +1,18 @@
 import json
+import os
 import subprocess
 from pathlib import Path
+
+# LLMObs must be enabled before the Anthropic client is instantiated (imported from analyzer)
+_dd_api_key = os.environ.get("DD_API_KEY")
+if _dd_api_key:
+    from ddtrace.llmobs import LLMObs
+    LLMObs.enable(
+        ml_app="tax_admin",
+        agentless_enabled=True,
+        api_key=_dd_api_key,
+        site=os.environ.get("DD_SITE", "datadoghq.com"),
+    )
 
 import anthropic
 from fastapi import FastAPI, HTTPException, Request
@@ -44,8 +56,7 @@ def pick_folder():
     )
     if result.returncode != 0:
         raise HTTPException(status_code=400, detail="No folder selected")
-    path = result.stdout.strip()
-    return {"path": path}
+    return {"path": result.stdout.strip()}
 
 
 @app.get("/")
@@ -76,8 +87,7 @@ def analyze_stream_endpoint(req: FolderRequest):
         try:
             for event in analyze_stream(folder):
                 if event.get("type") == "done":
-                    result = event["result"]
-                    RESULTS_FILE.write_text(json.dumps(result, indent=2))
+                    RESULTS_FILE.write_text(json.dumps(event["result"], indent=2))
                 yield f"data: {json.dumps(event)}\n\n"
         except Exception as exc:
             yield f"data: {json.dumps({'type': 'error', 'message': str(exc)})}\n\n"
