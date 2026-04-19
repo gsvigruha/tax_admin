@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.env
+
+# Backend results
+backend/tax_results.json
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.env
+.DS_Store
+
+# Claude session data
+.claude/
