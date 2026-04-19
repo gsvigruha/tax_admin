@@ -6,6 +6,7 @@ from pathlib import Path
 # LLMObs must be enabled before the Anthropic client is instantiated (imported from analyzer)
 _dd_api_key = os.environ.get("DD_API_KEY")
 if _dd_api_key:
+    os.environ.setdefault("DD_TRACE_ENABLED", "false")  # no local agent — agentless only
     from ddtrace.llmobs import LLMObs
     LLMObs.enable(
         ml_app="tax_admin",
