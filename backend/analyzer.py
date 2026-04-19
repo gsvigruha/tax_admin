@@ -215,14 +215,11 @@ def analyze_stream(folder: Path) -> Generator[dict, None, None]:
     all_names = []
 
     for i, batch in enumerate(batches):
-        if i > 0:
-            time.sleep(62)
         names_in_batch = [f["name"] for f in batch]
         all_names.extend(names_in_batch)
-        suffix = " (pausing 60s for rate limit)" if i > 0 else ""
         yield {
             "type": "analyzing",
-            "message": f"Analyzing batch {i + 1} of {num_batches} ({len(batch)} files: {', '.join(names_in_batch[:3])}{'…' if len(names_in_batch) > 3 else ''}){suffix}…",
+            "message": f"Analyzing batch {i + 1} of {num_batches} ({len(batch)} files: {', '.join(names_in_batch[:3])}{'…' if len(names_in_batch) > 3 else ''})…",
             "batch": i + 1,
             "total_batches": num_batches,
         }
