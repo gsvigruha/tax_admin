@@ -147,20 +147,20 @@ BATCH_PROMPT = """Analyze the tax documents above and extract all financial data
 }
 Include every dollar amount you can find."""
 
-SYNTHESIS_PROMPT = """You are an expert tax preparer. Combine these partial analyses from multiple document batches into one final report. Return ONLY a JSON object:
+SYNTHESIS_PROMPT = """You are an expert tax preparer. Combine these partial analyses into one final summary report. Group and consolidate — do NOT list every transaction. Return ONLY a JSON object:
 {
   "documents_analyzed": ["all filenames"],
-  "income": [{"description": "...", "amount": 0.00, "source": "...", "type": "W2|1099-NEC|1099-MISC|1099-INT|1099-DIV|other"}],
-  "deductions": [{"description": "...", "amount": 0.00, "category": "business|medical|charitable|mortgage|state_tax|other"}],
-  "estimated_payments": [{"description": "...", "amount": 0.00, "date": "...", "jurisdiction": "federal|state|NYC|other"}],
+  "income": [{"description": "grouped label e.g. 'W2 wages (Datadog)'", "amount": 0.00, "source": "employer/payer", "type": "W2|1099-NEC|1099-MISC|1099-INT|1099-DIV|other"}],
+  "deductions": [{"description": "grouped label e.g. 'Business travel (flights + hotels)'", "amount": 0.00, "category": "business|medical|charitable|mortgage|state_tax|other"}],
+  "estimated_payments": [{"description": "grouped label e.g. 'Federal estimated payments 2025'", "amount": 0.00, "date": "year or last date", "jurisdiction": "federal|state|NYC|other"}],
   "total_income": 0.00,
   "total_deductions": 0.00,
   "total_estimated_payments": 0.00,
   "estimated_taxable_income": 0.00,
-  "summary": "One paragraph plain-English summary of the full tax picture",
-  "notes": ["caveats or missing info"]
+  "summary": "2-3 sentence plain-English summary of the full tax picture",
+  "notes": ["caveats or missing info — keep brief"]
 }
-Deduplicate entries that appear in multiple batches. Compute all totals accurately."""
+Aim for 5-10 grouped line items per section. Deduplicate across batches. Compute all totals accurately."""
 
 SYSTEM_PROMPT = "You are an expert tax preparer. Extract financial data from tax documents. Return ONLY raw JSON — no markdown, no code fences, no explanation."
 
@@ -262,8 +262,7 @@ def analyze_stream(folder: Path) -> Generator[dict, None, None]:
         content_blocks = [
             {"type": "text", "text": f"Partial analyses from {num_batches} document batches:\n\n{synthesis_input}\n\n{SYNTHESIS_PROMPT}"}
         ]
-        # Opus + thinking only for the synthesis step; 16k tokens to handle large document sets
-        raw = _call_claude(content_blocks, model="claude-opus-4-7", use_thinking=True, max_tokens=16000)
+        raw = _call_claude(content_blocks, model="claude-opus-4-7", use_thinking=True, max_tokens=4096)
         result = _extract_json(raw) or {
             "documents_analyzed": all_names,
             "income": [], "deductions": [], "estimated_payments": [],
