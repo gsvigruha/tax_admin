@@ -147,9 +147,8 @@ BATCH_PROMPT = """Analyze the tax documents above and extract all financial data
 }
 Include every dollar amount you can find."""
 
-SYNTHESIS_PROMPT = """You are an expert tax preparer. Combine these partial analyses into one final summary report. Group and consolidate — do NOT list every transaction. Return ONLY a JSON object:
+SYNTHESIS_PROMPT = """You are an expert tax preparer. Combine these partial analyses into one concise final report. Group and consolidate — do NOT list every transaction. Return ONLY a JSON object with exactly these fields:
 {
-  "documents_analyzed": ["all filenames"],
   "income": [{"description": "grouped label e.g. 'W2 wages (Datadog)'", "amount": 0.00, "source": "employer/payer", "type": "W2|1099-NEC|1099-MISC|1099-INT|1099-DIV|other"}],
   "deductions": [{"description": "grouped label e.g. 'Business travel (flights + hotels)'", "amount": 0.00, "category": "business|medical|charitable|mortgage|state_tax|other"}],
   "estimated_payments": [{"description": "grouped label e.g. 'Federal estimated payments 2025'", "amount": 0.00, "date": "year or last date", "jurisdiction": "federal|state|NYC|other"}],
@@ -157,10 +156,10 @@ SYNTHESIS_PROMPT = """You are an expert tax preparer. Combine these partial anal
   "total_deductions": 0.00,
   "total_estimated_payments": 0.00,
   "estimated_taxable_income": 0.00,
-  "summary": "2-3 sentence plain-English summary of the full tax picture",
-  "notes": ["caveats or missing info — keep brief"]
+  "summary": "2-3 sentence plain-English summary",
+  "notes": ["up to 5 short caveats"]
 }
-Aim for 5-10 grouped line items per section. Deduplicate across batches. Compute all totals accurately."""
+Max 8 line items per section. Max 5 notes. Deduplicate across batches. Compute totals accurately."""
 
 SYSTEM_PROMPT = "You are an expert tax preparer. Extract financial data from tax documents. Return ONLY raw JSON — no markdown, no code fences, no explanation."
 
