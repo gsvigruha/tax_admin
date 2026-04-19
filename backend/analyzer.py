@@ -165,10 +165,10 @@ Deduplicate entries that appear in multiple batches. Compute all totals accurate
 SYSTEM_PROMPT = "You are an expert tax preparer. Extract financial data from tax documents. Return ONLY raw JSON — no markdown, no code fences, no explanation."
 
 
-def _call_claude(content_blocks: list[dict], model: str, use_thinking: bool) -> str:
+def _call_claude(content_blocks: list[dict], model: str, use_thinking: bool, max_tokens: int = 4096) -> str:
     kwargs: dict = {
         "model": model,
-        "max_tokens": 4096,
+        "max_tokens": max_tokens,
         "system": SYSTEM_PROMPT,
         "messages": [{"role": "user", "content": content_blocks}],
     }
@@ -262,8 +262,8 @@ def analyze_stream(folder: Path) -> Generator[dict, None, None]:
         content_blocks = [
             {"type": "text", "text": f"Partial analyses from {num_batches} document batches:\n\n{synthesis_input}\n\n{SYNTHESIS_PROMPT}"}
         ]
-        # Opus + thinking only for the synthesis step
-        raw = _call_claude(content_blocks, model="claude-opus-4-7", use_thinking=True)
+        # Opus + thinking only for the synthesis step; 16k tokens to handle large document sets
+        raw = _call_claude(content_blocks, model="claude-opus-4-7", use_thinking=True, max_tokens=16000)
         result = _extract_json(raw) or {
             "documents_analyzed": all_names,
             "income": [], "deductions": [], "estimated_payments": [],
